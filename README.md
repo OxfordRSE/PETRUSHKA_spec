@@ -63,6 +63,7 @@ The details of these requests are specified below the Variables list.
 | ssri_history                            | bool        | Sentry, OBS       | Whether this patient has been prescribed SSRIs before                                                                       |
 | antidepressant_history                  | bool        | Sentry, OBS       | Whether this patient has been prescribed antidepressants before                                                             |
 | bmi                                     | double      | Sentry, OBS       | Patient's body mass index (kg/m^2)                                                                                          |
+| smoking_history                         | bool        | Sentry, OBS       | Whether patient has ever been a smoker                                                                                      |
 | phq_9                                   | int         | Sentry, OBS       | Patient Health Questionnaire (PHQ-9) baseline depression severity score, 0-27                                               |
 | psychotherapy_history                   | bool        | Sentry, OBS       | Whether this patient has previously had psychotherapy                                                                       |
 | secondary_care_history                  | bool        | Sentry, OBS       | Whether this patient has previously been referred to secondary care                                                         |
@@ -79,6 +80,7 @@ The details of these requests are specified below the Variables list.
 | asprin_use                              | bool        | Sentry, OBS       | Whether this patient is currently using asprin                                                                              |
 | statins_use                             | bool        | Sentry, OBS       | Whether this patient is currently using statins                                                                             |
 | non_steroidal_anti_inflamatory_drug_use | bool        | Sentry, OBS       | Whether this patient is currently using non-steroidal anti-inflamatory drugs                                                |
+| anticoagulants_use                      | bool        | Sentry, OBS       | Whether this patient is currently using anti-coagulant drugs                                                                |
 | anticonvulsant_use                      | bool        | Sentry, OBS       | Whether this patient is currently using anticonvulsant                                                                      |
 | hypnotics_anxiolytics_use               | bool        | Sentry, OBS       | Whether this patient is currently using hypnotics or anxiolytics                                                            |
 | bisphosphonates_use                     | bool        | Sentry, OBS       | Whether this patient is currently using bisphosphonates                                                                     |
@@ -152,14 +154,24 @@ petrushka_backend.get_adverse_effect_options(patient_data)
 ### _Algorithm_ Send adverse effect options _to Django_
 
 ```python
-adverse_effect_options = [
-  {
-    'name': 'ae_1_name',            # Name of the adverse effect
-    'probability': (0.05, 0.30)     # Tuple of (low, high) probability range
-  },
-  { 'name': 'ae_2_name', 'probability': (0.00, 0.20) },
-  # ...etc. for the other 3 adverse effect options
-]
+# List of adverse effect names. Should be length 3, and the order is not important.
+adverse_effect_options = ['ae_1_name', 'weight_gain', 'ae_16_name']
+```
+
+#### _Algorithm_: Adverse effect probabilities
+
+The Algorithm should also expose a dictionary of adverse effect names and their associated probability ranges:
+
+```python
+petrushka_backend.ae_probs = {
+  'ae_1_name': (  # key is the adverse effect's name
+    0.01,  # Value is a tuple of low,
+    0.10   # high probability of occurence
+  ),
+  'ae_2_name': (0.05, 0.05),
+  'weight_gain': (0.01, 0.25),
+  # ...etc. for all adverse effects
+}
 ```
 
 ### _Django_ Send adverse effect preferences _to Algorithm_
