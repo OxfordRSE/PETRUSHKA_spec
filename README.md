@@ -233,11 +233,17 @@ The Algorithm should also expose a dictionary of drug details:
 petrushka_backend.drug_details = {
   'D_1': {  # Drug identifier
     'name': 'Agomelatine',  # Drug display name
-    'url': 'https://link-to-offical.nhs/descrition'  # Link to details
+    'url': 'https://link-to-offical.nhs/descrition',  # Link to details,
+    'prescription': """
+        Initially 15-30 mg daily for 2-4 weeks, dose to be taken at baseline,
+        then adjusted according to response up to 45 mg once daily,
+        alternatively up to 45 mg daily in 2 divided doses.
+        """
   },    
   'D_2': {
     'name': 'Amitriptyline',
-    'description': 'https://link-to-offical.nhs/descrition'
+    'description': 'https://link-to-offical.nhs/descrition',
+    'prescription': '...'  # Details of how drug is prescribed
   },
   # ...etc. for all drugs
 }
