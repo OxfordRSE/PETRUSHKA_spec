@@ -164,13 +164,13 @@ The Algorithm should also expose a dictionary of adverse effect names and their 
 
 ```python
 petrushka_backend.adverse_effect_details = {
-  'SE_1': {
-    'name': 'ae_1_name',
-    'probs': (  # key is the adverse effect's name
-      0.01,  # Value is a tuple of low,
-      0.10   # high probability of occurence
+  'SE_1': {  # Adverse effect identifier
+    'name': 'ae_1_name',  # Adverse effect display name
+    'probs': (  # Tuple of low, high probabilities
+      0.01, 
+      0.10  
     ),
-    'description': 'You probably don\t want this.'
+    'description': 'You probably don\t want this.'  # Description
   },    
   'SE_2': {
     'name': 'ae_2_name',
