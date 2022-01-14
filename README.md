@@ -214,9 +214,10 @@ drug_options = [
   {  # option 1
     'id': 'D_1',  # The drug's name (this will not be shown to the user yet). Serves as a unique identifier.
     'predictions': {
+      'score': 'int',               # Overall score
       'efficacy': 'double',         # How well drug will work for patient
       'acceptability': 'double',    # How acceptable drug will be to patient
-      'SE_1': 'double',        # Likelihood of adverse_effect_1
+      'SE_1': 'double',             # Likelihood of adverse_effect_1
       # ...etc. for the other 4 adverse effects
     }
   },
