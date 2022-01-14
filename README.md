@@ -155,12 +155,12 @@ petrushka_backend.get_adverse_effect_options(patient_data)
 
 ```python
 # List of adverse effect names. Should be length 3, and the order is not important.
-adverse_effect_options = ['ae_1_name', 'weight_gain', 'ae_16_name']
+adverse_effect_options = ['SE_1', 'SE_2', 'SE_16']
 ```
 
 #### _Algorithm_: Adverse effect details
 
-The Algorithm should also expose a dictionary of adverse effect names and their associated details:
+The Algorithm should also expose a dictionary of adverse effect details:
 
 ```python
 petrushka_backend.adverse_effect_details = {
@@ -186,17 +186,17 @@ petrushka_backend.adverse_effect_details = {
 ```python
 preference = [  # list of dictionaries, each dictionary is an adverse effect. Order is arbitrary.
   {  # Dictionary for adverse effect 1
-    'name': 'ae_1_name',  # Adverse effect name
+    'id': 'SE_1',  # Adverse effect name
     'rank': 5,  # Rank as ranked by the user. Higher values = more preferred.
     'score': 100  # Score as given by the user. Rank 5 will always have score 100. Higher values = more preferred.
   },
   {
-    'name': 'ae_2_name',
+    'id': 'SE_2',
     'rank': 4,
     'score': 30  # Note that 'score' and 'rank' are not necessarily related: users can give a higher rank a lower score
   },
   {
-    'name': 'weight_gain',
+    'id': 'SE_16',
     'rank': 3,
     'score': 75
   }
@@ -212,16 +212,34 @@ petrushka_backend.get_drug_options(patient_data, preference)
 ```python
 drug_options = [
   {  # option 1
-    'name': 'examplin',  # The drug's name (this will not be shown to the user yet). Serves as a unique identifier.
+    'id': 'D_1',  # The drug's name (this will not be shown to the user yet). Serves as a unique identifier.
     'predictions': {
       'efficacy': 'double',         # How well drug will work for patient
       'acceptability': 'double',    # How acceptable drug will be to patient
-      'ae_1_name': 'double',        # Likelihood of adverse_effect_1
+      'SE_1': 'double',        # Likelihood of adverse_effect_1
       # ...etc. for the other 4 adverse effects
     }
   },
   # ... for options 2 and 3
 ]
+```
+
+#### _Algorithm_: Drug details
+
+The Algorithm should also expose a dictionary of drug details:
+
+```python
+petrushka_backend.drug_details = {
+  'D_1': {  # Drug identifier
+    'name': 'Agomelatine',  # Drug display name
+    'url': 'https://link-to-offical.nhs/descrition'  # Link to details
+  },    
+  'D_2': {
+    'name': 'Amitriptyline',
+    'description': 'https://link-to-offical.nhs/descrition'
+  },
+  # ...etc. for all drugs
+}
 ```
 
 ### _Django_ Send patient choice _to Sentry_
