@@ -158,18 +158,25 @@ petrushka_backend.get_adverse_effect_options(patient_data)
 adverse_effect_options = ['ae_1_name', 'weight_gain', 'ae_16_name']
 ```
 
-#### _Algorithm_: Adverse effect probabilities
+#### _Algorithm_: Adverse effect details
 
-The Algorithm should also expose a dictionary of adverse effect names and their associated probability ranges:
+The Algorithm should also expose a dictionary of adverse effect names and their associated details:
 
 ```python
-petrushka_backend.ae_probs = {
-  'ae_1_name': (  # key is the adverse effect's name
-    0.01,  # Value is a tuple of low,
-    0.10   # high probability of occurence
-  ),
-  'ae_2_name': (0.05, 0.05),
-  'weight_gain': (0.01, 0.25),
+petrushka_backend.adverse_effect_details = {
+  'SE_1': {
+    'name': 'ae_1_name',
+    'probs': (  # key is the adverse effect's name
+      0.01,  # Value is a tuple of low,
+      0.10   # high probability of occurence
+    ),
+    'description': 'You probably don\t want this.'
+  },    
+  'SE_2': {
+    'name': 'ae_2_name',
+    'probs': (0.05, 0.25),
+    'description': 'You probably don\t want this.'
+  },
   # ...etc. for all adverse effects
 }
 ```
