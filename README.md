@@ -18,26 +18,38 @@ participant Django
 participant Sentry
 
 hnote over Django : Clinican login
-hnote over Django : Patient token submitted
 
-Django -> Sentry : Request patient data\n(""{token, clinician}"")
-hnote over Sentry : Check clinician access
-Sentry -> Django : Send patient data
-Django -> Sentry : Send acknolwedgement\n(lock future access)
+Django -> Sentry : Request available and active patient overviews\n(""{clinician}"")
+hnote over Sentry : Identify patients accessible by\nclinician via surgery group
+Sentry -> Django : Send available (basic demographic) patient data\n(""[{token, age, male_at_birth, ...}, ...]"")
 
-Django -> Algorithm : ""patient_data""
+hnote over Django : Clinician selects patient by\ntoken/basic demographic info
+hnote over Django : Clinician selects excluded drug options for patient
+hnote over Django : Patient selected to rank adverse effects
+
+Django -> Sentry : Request patient data\n(""{clinician, token}"")
+hnote over Sentry : Identify patient is accessible by\nclinician via surgery group
+Sentry -> Django : Send patient data\n(""{token, age, male_at_birth, ...}"")
+
+Django -> Algorithm : Send data to Algorithm 1\n""patient_data, excluded_drugs""
 hnote over Algorithm : Select adverse effect options
 Algorithm -> Django : ""[ adverse effect options ]""
 hnote over Django : Patient ranks and scores\nadverse effects
 
-Django -> Algorithm : ""patient_data, ae_preferences""
+Django -> Sentry : Request patient data\n(""{clinician, token}"")
+hnote over Sentry : Identify patient is accessible by\nclinician via surgery group
+Sentry -> Django : Send patient data\n(""{token, age, male_at_birth, ...}"")
+
+Django -> Algorithm : Send data to Algorithm 2\n""patient_data,""\n""excluded_drugs""\n""ae_preferences""
 hnote over Algorithm : Identify drug options 
 Algorithm -> Django : ""[ drug options ]""
 hnote over Django : Patient selects preferred drug\nin consultation with clinician
 
-Django -> Sentry : Send patient choice\n(""{token, clinician, preference}"")
+Django -> Sentry : Send patient choice\n(""{token, clinician, session_info}"")
 
 ```
+
+
 ![Workflow overview](workflow.png)
 
 ### Interfaces
@@ -54,7 +66,7 @@ The details of these requests are specified below the Variables list.
 
 | Variable                                | Type        | Used by           | Description                                                                                                                 |
 |-----------------------------------------|-------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **token**                               | string      | Sentry, Django    | Patient unique identifier. In the form `[PS][0-9]{4}`                                                                       | 
+| **token**                               | string      | Sentry, Django    | Patient unique identifier. In the form `^[PS][0-9]{4}$`                                                                     | 
 | clinician                               | string      | Sentry, Django    | Username of the clinician to whom this patient is assigned                                                                  |
 | male_at_birth                           | bool        | All               | Whether patient was assigned male at birth                                                                                  |
 | age                                     | int         | All               | Patient age in years                                                                                                        |
@@ -104,39 +116,54 @@ The details of these requests are specified below the Variables list.
  
 ## Interchange formats
 
-There are 8 interactions between components. 
-The details for each of these 8 requests are as follows:
+There are 9 interactions between components. 
+The details for each of these requests are as follows:
 
-### _Django_ Request patient data _from Sentry_
+### _Django_ Request available patient data _from Sentry_
 
 ```json5
 {
   "authorisation": "string",  // Access token
   "action": "ptdata",         // Requested operation
-  "clinician": "string",      // Clinician identifier
-  "token": "string"           // Patient identifier matching RegExpr [PS][0-9]{4}
+  "clinician": "string"       // Clinician identifier
 }
 ```
 
 ### _Sentry_ Send patient data _to Django_
 
 ```json5
-{
-  "token": "string",            // Patient identifier
-  "age": "int",                 // Patient age
-  "male_at_birth": "boolean",   // Whether patient was assigned male at birth
-  // ...etc. for patient information keys listed in the Variables section
-}
+[
+  {
+    "token": "string",            // Patient identifier
+    "initials": "string",         // Patient initials
+    "age": "int",                 // Patient age
+    "male_at_birth": "boolean",   // Whether patient was assigned male at birth
+    "time_created": "timestamp"   // When the patient OpenClinica record was created
+  }
+]
 ```
 
-### _Django_ Send acknowledgement _to Sentry_
+### _Django_ Request specific patient data _from Sentry_
 
 ```json5
 {
   "authorisation": "string",  // Access token
-  "action": "ptdata_ack",     // Requested operation
-  "token": "string",          // Patient identifier matching RegExpr [PS][0-9]{4}
-  "status": "success"         // Clinician identifier
+  "action": "ptdata",         // Requested operation
+  "clinician": "string",      // Clinician identifier
+  "token": "string"           // Patient identifier matching RegExpr ^[PS][0-9]{4}$
+}
+```
+
+### _Sentry_ Send specific patient data _to Django_
+
+```json5
+{
+  "token": "string",            // Patient identifier
+  "initials": "string",         // Patient initials
+  "age": "int",                 // Patient age
+  "male_at_birth": "boolean",   // Whether patient was assigned male at birth
+  "time_created": "timestamp"   // When the patient OpenClinica record was created
+  // ...etc. for patient information keys listed in the Variables section
 }
 ```
 
@@ -256,7 +283,7 @@ petrushka_backend.drug_details = {
   "authorisation": "string",  // Access token
   "action": "ptsession",      // Requested operation
   "clinician": "string",      // Clinician identifier
-  "token": "string",          // Patient identifier matching RegExpr [PS][0-9]{4}
+  "token": "string",          // Patient identifier matching RegExpr ^[PS][0-9]{4}$
   "session": {
     "drug_chosen": "string"   // Name of the drug chosen
   }
