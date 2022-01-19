@@ -111,6 +111,7 @@ The details of these requests are specified below the Variables list.
 | **preference**                          | Array<Dict> | Django, Algorithm | Patient's preferences for adverse effects. Each adverse effect is a dictionary with keys 'name', 'rank', and 'score'        |
 | drug_options                            | Array<Dict> | Django, Algorithm | List of drug options to present to the patient. Each drug is presented as a dictionary with keys and values specified below |
 | **drug_chosen**                         | string      | Django, Sentry    | Drug chosen by patient in consultation with clinician                                                                       |
+ | petrushka_output                        | string      | Django, Sentry    | JSON string of all petrushka output                                                                                         |
  
 **bold** names indicate variables that come from _users_. We should discuss a validation strategy for these variables -- who will validate them for security and how.
  
@@ -139,7 +140,8 @@ The details for each of these requests are as follows:
     "age": "int",                 // Patient age
     "male_at_birth": "boolean",   // Whether patient was assigned male at birth
     "time_created": "timestamp"   // When the patient OpenClinica record was created
-  }
+  },
+  // ... etc. for each patient accessible by clinician and not yet completed (i.e. no session data present)
 ]
 ```
 
@@ -175,14 +177,24 @@ patient_data = {
   "male_at_birth": "boolean",   # Whether patient was assigned male at birth
   # ...etc. for patient information keys listed in the Variables section
 }
-petrushka_backend.get_adverse_effect_options(patient_data)
+excluded_drugs = [
+  'Amitriptyline',
+  'Escitalopram',
+  # ...etc. for any other drugs excluded for patient by clinician
+]
+petrushka_backend.get_adverse_effect_options(patient_data, excluded_drugs)
 ```
 
 ### _Algorithm_ Send adverse effect options _to Django_
 
 ```python
-# List of adverse effect names. Should be length 3, and the order is not important.
-adverse_effect_options = ['SE_1', 'SE_2', 'SE_16']
+# List of adverse effect names. Should be length 5, and the order is not important.
+adverse_effect_options = [
+  'Tremor', 
+  'Pain', 
+  'Visual disorder or impairment',
+  # ... etc. for the other 2 adverse effect options
+]
 ```
 
 #### _Algorithm_: Adverse effect details
@@ -211,45 +223,34 @@ petrushka_backend.adverse_effect_details = {
 ### _Django_ Send adverse effect preferences _to Algorithm_
 
 ```python
-preference = [  # list of dictionaries, each dictionary is an adverse effect. Order is arbitrary.
-  {  # Dictionary for adverse effect 1
-    'id': 'SE_1',  # Adverse effect name
-    'rank': 5,  # Rank as ranked by the user. Higher values = more preferred.
-    'score': 100  # Score as given by the user. Rank 5 will always have score 100. Higher values = more preferred.
+preference = pandas.DataFrame(
+  data={
+    'Tremor': [90],
+    'Pain': [73],
+    # ... etc. for the other 3 adverse effects
   },
-  {
-    'id': 'SE_2',
-    'rank': 4,
-    'score': 30  # Note that 'score' and 'rank' are not necessarily related: users can give a higher rank a lower score
-  },
-  {
-    'id': 'SE_16',
-    'rank': 3,
-    'score': 75
-  }
-  # ...etc. for the other 2 AEs included as keys in drug_options[0]['ae_probs']
-]
-petrushka_backend.get_drug_options(patient_data, preference)
+  index=['weight']
+)
+petrushka_backend.get_drug_options(patient_data, excluded_drugs, preference)
 ```
 
-`patient_data` as defined in [Django Send patient data to Algorithm](#Django Send patient data to Algorithm).
+`patient_data` and `excluded_drugs` as defined in 
+[Django Send patient data to Algorithm](#Django Send patient data to Algorithm).
 
 ### _Algorithm_ Send drug options _to Django_
 
 ```python
-drug_options = [
-  {  # option 1
-    'id': 'D_1',  # The drug's name (this will not be shown to the user yet). Serves as a unique identifier.
-    'predictions': {
-      'score': 'int',               # Overall score
-      'efficacy': 'double',         # How well drug will work for patient
-      'acceptability': 'double',    # How acceptable drug will be to patient
-      'SE_1': 'double',             # Likelihood of adverse_effect_1
-      # ...etc. for the other 4 adverse effects
-    }
+drug_options = pandas.DataFrame(
+  data={
+    'score': [0.92, 0.84, 0.77],
+    'efficacy': [0.62, 0.22, 0.39],
+    'acceptability': [0.22, 0.40, 0.13],
+    'Tremor': [0.03, 0.07, 0.21],
+    'Pain': [0.05, 0.01, 0.13],
+    # ... etc. for the other 3 adverse effects
   },
-  # ... for options 2 and 3
-]
+  index=['Agomelatine', 'Amitriptyline', 'Escitalopram']  # Indexes are drug names
+)
 ```
 
 #### _Algorithm_: Drug details
@@ -280,12 +281,13 @@ petrushka_backend.drug_details = {
 
 ```json5
 {
-  "authorisation": "string",  // Access token
-  "action": "ptsession",      // Requested operation
-  "clinician": "string",      // Clinician identifier
-  "token": "string",          // Patient identifier matching RegExpr ^[PS][0-9]{4}$
+  "authorisation": "string",      // Access token
+  "action": "ptsession",          // Requested operation
+  "clinician": "string",          // Clinician identifier
+  "token": "string",              // Patient identifier matching RegExpr ^[PS][0-9]{4}$
   "session": {
-    "drug_chosen": "string"   // Name of the drug chosen
+    "drug_chosen": "string",      // Name of the drug chosen
+    "petrushka_output": "string"  // JSON of all PETRUSHKA output
   }
 }
 ```
