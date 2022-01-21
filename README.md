@@ -135,11 +135,12 @@ The details for each of these requests are as follows:
 ```json5
 [
   {
-    "token": "string",            // Patient identifier
-    "initials": "string",         // Patient initials
-    "age": "int",                 // Patient age
-    "male_at_birth": "boolean",   // Whether patient was assigned male at birth
-    "time_created": "timestamp"   // When the patient OpenClinica record was created
+    "token": "string",              // Patient identifier
+    "creating_clinician": "string", // Clinician who created the patient's record in OpenClinica
+    "initials": "string",           // Patient initials
+    "age": "int",                   // Patient age
+    "male_at_birth": "boolean",     // Whether patient was assigned male at birth
+    "time_created": "timestamp"     // When the patient OpenClinica record was created
   },
   // ... etc. for each patient accessible by clinician and not yet completed (i.e. no session data present)
 ]
