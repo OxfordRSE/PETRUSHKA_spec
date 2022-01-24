@@ -125,7 +125,7 @@ The details for each of these requests are as follows:
 ```json5
 {
   "authorisation": "string",  // Access token
-  "action": "ptdata",         // Requested operation
+  "action": "ptlist",         // Requested operation
   "clinician": "string"       // Clinician identifier
 }
 ```
