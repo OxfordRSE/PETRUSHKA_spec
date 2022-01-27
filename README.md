@@ -199,6 +199,18 @@ adverse_effect_options = [
 ]
 ```
 
+The Algorithm should also expose a list of possible reasons to exclude a drug:
+```python
+# List of potential exclusion reasons.
+petrushka_backend.drug_exclusion_reasons = [
+    'Incompatible demographic',
+    'Not believed to be effective',
+    'Incompatible with current medication',
+    'Incompatible with patient medical history',
+    'Really rather expensive and the NHS has no money anymore'
+]
+```
+
 #### _Algorithm_: Adverse effect details
 
 The Algorithm should also expose a dictionary of adverse effect details:
